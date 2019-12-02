@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sort</title>
+</head>
+<body>
+<script>
+    //    75 三路快排
+    //    /**
+    //     * @param {number[]} nums
+    //     * @return {void} Do not return anything, modify nums in-place instead.
+    //     */
+    var sortColors = function (nums) {
+        const len = nums.length;
+        if (len < 2)return;
+        let zero = -1, two = 0, index = 0;
+        while (index < len - two) {
+            if (!nums[index]) {
+                nums[index] = nums[zero + 1];
+                nums[zero + 1] = 0;
+                index++;
+                zero++;
+            } else if (nums[index] == 1) {
+                index++;
+            } else {
+                nums[index] = nums[len - 1 - two];
+                nums[len - 1 - two] = 2;
+                two++;
+            }
+        }
+    };
+
+    //三路快排
+    function quickSort3(arr, lt, gt) {
+        if (lt >= gt || lt < 0 || gt > arr.length - 1) {
+            return;
+        }
+        let l = lt, r = gt + 1, i = l + 1;
+        const val = arr[l];
+        while (l < r && i < r) {
+            if (arr[i] < val) {
+                [arr[i], arr[l + 1]] = [arr[l + 1], arr[i]];
+                i++;
+                l++;
+            } else if (arr[i] == val) {
+                i++;
+            } else {
+                r--;
+                [arr[i], arr[r]] = [arr[r], arr[i]];
+            }
+        }
+        [arr[l], arr[0]] = [arr[0], arr[l]];
+        quickSort(arr, lt, l - 1);
+        quickSort(arr, r, gt);
+    }
+    let arr = [2, 0, 2, 1, 1, 0];
+    sortColors(arr);
+    console.log(arr);
+
+    //    215 用快排解决更优化 每次partition后与分割点比较 可以缩减范围
+</script>
+
+</body>
+</html>

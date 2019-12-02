@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BFS:最短路径</title>
+</head>
+<body>
+<script>
+    /** 773 上下左右搜寻最短路径,visited记录当前布局,把二维数组转换成字符串
+     * @param {number[][]} board
+     * @return {number}
+     */
+    var slidingPuzzle = function (board) {
+        const TER = '1,2,3,4,5,0';
+        if (board + '' == TER) {
+            return 0;
+        }
+        let ret = 1;
+        board = [...board[0], ...board[1]];
+        const S = board.findIndex(a=>!a);
+        let queue = [{s: S, graph: board}], visited = [board + ''];
+        while (queue.length) {
+            const queueNext = [];
+            for (let i = 0; i < queue.length; i++) {
+                const index = queue[i].s;
+                //左移
+                if (index % 3) {
+                    const arr = [...queue[i].graph];
+                    [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                    const str = arr + '';
+                    if (str == TER) {
+                        return ret;
+                    }
+                    if (!visited.includes(str)) {
+                        visited.push(str);
+                        queueNext.push({s: index - 1, graph: arr});
+                    }
+                }
+
+                //右移
+                if (index % 3 < 2) {
+                    const arr = [...queue[i].graph];
+                    [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+                    const str = arr + '';
+                    if (str == TER) {
+                        return ret;
+                    }
+                    if (!visited.includes(str)) {
+                        visited.push(str);
+                        queueNext.push({s: index + 1, graph: arr});
+                    }
+                }
+                //上移
+                if (index > 2) {
+                    const arr = [...queue[i].graph];
+                    [arr[index - 3], arr[index]] = [arr[index], arr[index - 3]];
+                    const str = arr + '';
+                    if (str == TER) {
+                        return ret;
+                    }
+                    if (!visited.includes(str)) {
+                        visited.push(str);
+                        queueNext.push({s: index - 3, graph: arr});
+                    }
+                }
+                //下移
+                if (index < 3) {
+                    const arr = [...queue[i].graph];
+                    [arr[index + 3], arr[index]] = [arr[index], arr[index + 3]];
+                    const str = arr + '';
+                    if (str == TER) {
+                        return ret;
+                    }
+                    if (!visited.includes(str)) {
+                        visited.push(str);
+                        queueNext.push({s: index + 3, graph: arr});
+                    }
+                }
+            }
+            ret++;
+            queue = queueNext;
+        }
+        return -1;
+    };
+
+//    console.log(slidingPuzzle([[1, 2, 3], [4, 0, 5]]));
+//    console.log(slidingPuzzle([[1, 2, 3], [5, 4, 0]]));
+
+    /** 815
+     * @param {number[][]} routes
+     * @param {number} S
+     * @param {number} T
+     * @return {number}
+     */
+    var numBusesToDestination = function (routes, S, T) {
+        if (S == T) {
+            return 0;
+        }
+        let ret = 1;
+        const stops = {};
+        routes.forEach((r, i, arr)=> {
+            //去重, 这里用 r=[...new Set(r)]不好使
+            arr[i] = [...new Set(r)];
+            r.forEach(s=> {
+                if (stops[s]) {
+                    stops[s].push(i);
+                } else {
+                    stops[s] = [i];
+                }
+            })
+        });
+        let queue = stops[S];
+        let visited = stops[S];
+        //路线的队列,若终点在当前路线上,返回当前换线数;否则当前的路线上的交叉线站上未经过的线推入队列,最后换线数++
+        while (queue.length) {
+            const temp = [];
+            for (let i = 0; i < queue.length; i++) {
+                const route = routes[queue[i]];
+                for (let j = 0; j < route.length;) {
+                    if (route[j] == T) {
+                        return ret;
+                        //一个优化,若当前站不是交叉线或是起点,则把此站删去以后不必循环
+                    } else if (stops[route[j]].length == 1 || route[j] == S) {
+                        route.splice(j, 1);
+                    } else {
+                        stops[route[j]].forEach(r=> {
+                            if (!visited.includes(r)) {
+                                temp.push(r);
+                            }
+                        });
+                        j++;
+                    }
+                }
+            }
+            ret++;
+            queue = temp;
+            //处理过的路线不能重复
+            visited = visited.concat(temp);
+        }
+        //console.log(stops, queue);
+        return -1;
+    };
+    //    console.log(numBusesToDestination([[1, 2, 7], [3, 6, 7]], 1, 6));
+    //    console.log(numBusesToDestination([[1, 7], [3, 5]], 5, 5));
+</script>
+</body>
+</html>

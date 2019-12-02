@@ -1,2 +1,2 @@
-# leetcode
-multiple language: javascript py3 go sql
+# pythonAlg
+leetcode problems solved with Python

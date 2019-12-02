@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DFS</title>
+</head>
+<body>
+<script>
+    /** 200
+     * @param {character[][]} grid
+     * @return {number}
+     */
+    var numIslands = function (grid) {
+        let ret = 0;
+        const h = grid.length;
+        if (!h) return 0;
+        const w = grid[0].length, visited = [...new Array(h)].map(() => new Array(w).fill(false));
+        for (let i = 0; i < h; i++) {
+            for (let j = 0; j < w; j++) {
+                if (!visited[i][j]) {
+                    exploreVicinity(i, j, grid, visited);
+                    if (grid[i][j] == '1') {
+                        ret++;
+                    }
+                }
+            }
+        }
+        return ret;
+    };
+    var exploreVicinity = function (x, y, grid, visited) {
+        if (visited[x][y]) {
+            return;
+        }
+        visited[x][y] = true;
+        if (grid[x][y] == '1') {
+            if (x > 0) {
+                exploreVicinity(x - 1, y, grid, visited);
+            }
+            if (x < grid.length - 1) {
+                exploreVicinity(x + 1, y, grid, visited);
+            }
+            if (y > 0) {
+                exploreVicinity(x, y - 1, grid, visited);
+            }
+            if (y < grid[0].length - 1) {
+                exploreVicinity(x, y + 1, grid, visited);
+            }
+        }
+    }
+
+    //    console.log(numIslands([["1", "1", "1", "1", "0"], ["1", "1", "0", "1", "0"], ["1", "1", "0", "0", "0"], ["0", "0", "0", "0", "0"]]));
+    //    console.log(numIslands([["1", "1", "1"], ["0", "1", "0"], ["1", "1", "1"]]));
+
+
+    /**329
+     * @param {number[][]} matrix
+     * @return {number}
+     */
+    var longestIncreasingPath = function (matrix) {
+        if (!matrix.length) {
+            return 0;
+        }
+        const memo = [];
+        const m = matrix.length, n = matrix[0].length;
+        let res = 0;
+        matrix.forEach(el => {
+            memo.push(new Array(n));
+        });
+        for (let i = 0; i < m; i++) {
+            for (let j = 0; j < n; j++) {
+                res = Math.max(res, dfs(matrix, memo, matrix[i][j], i, j, m, n, 0));
+            }
+        }
+        return res;
+    };
+
+    var dfs = function (matrix, memo, val, i, j, m, n, round) {
+        if (i < 0 || i >= m || j < 0 || j >= n) {
+            return 0;
+        }
+        if (val < matrix[i][j]) {
+            return 0;
+        }
+        if (val == matrix[i][j] && round) {
+            return 0;
+        }
+        if (memo[i][j]) {
+            return memo[i][j];
+        }
+        const a = dfs(matrix, memo, matrix[i][j], i - 1, j, m, n, round + 1) + 1;
+        const b = dfs(matrix, memo, matrix[i][j], i + 1, j, m, n, round + 1) + 1;
+        const c = dfs(matrix, memo, matrix[i][j], i, j - 1, m, n, round + 1) + 1;
+        const d = dfs(matrix, memo, matrix[i][j], i, j + 1, m, n, round + 1) + 1;
+        const res = Math.max.apply(null, [a, b, c, d]);
+        memo[i][j] = res;
+        return res;
+    };
+
+    //    console.log(longestIncreasingPath(
+    //            [
+    //                [9, 9, 4],
+    //                [6, 6, 8],
+    //                [2, 1, 1]
+    //            ]
+    //    ));
+    //
+    //    console.log(longestIncreasingPath(
+    //            [
+    //                [3, 4, 5],
+    //                [3, 2, 6],
+    //                [2, 2, 1]
+    //            ]
+    //    ));
+    //    console.log(longestIncreasingPath(
+    //            [
+    //                [7, 8, 9],
+    //                [9, 7, 6],
+    //                [7, 2, 3]]
+    //    ));
+
+    /** 679 先dfs层层走,或上两两相算。注意两两相算的情况只包含(+-)乘除(-+)或乘除+-乘除,否则已被dfs覆盖。最后注意js的坑点,比较时必须要tofixed!
+     * @param {number[]} nums
+     * @return {boolean}
+     */
+    var judgePoint24 = function (nums) {
+        nums = nums.sort((a, b)=> b - a);
+        return dfs679(nums, 24);
+    };
+    const dfs679 = (nums, sum)=> {
+//        console.log(nums, sum);
+        let ret = false;
+        if (nums.length == 2) {
+            return isVaildByTwo(nums[0], nums[1], sum);
+        } else if (nums.length > 2) {
+            for (let i = 0; i < nums.length; i++) {
+                if (!i || nums[i] != nums[i - 1]) {
+                    const arr = [...nums.slice(0, i), ...nums.slice(i + 1)];
+                    ret = ret || dfs679(arr, sum + nums[i])
+                            || dfs679(arr, sum - nums[i]) || dfs679(arr, nums[i] - sum)
+                            || dfs679(arr, sum * nums[i])
+                            || dfs679(arr, sum / nums[i]) || dfs679(arr, nums[i] / sum);
+                }
+            }
+            if (nums.length == 4) {
+                ret = ret || isVaildByTwo([nums[0], nums[1]], [nums[2], nums[3]], 24) || isVaildByTwo([nums[0], nums[2]], [nums[1], nums[3]], 24) || isVaildByTwo([nums[0], nums[3]], [nums[1], nums[2]], 24);
+            }
+            return ret;
+        }
+    };
+    const isVaildByTwo = (a, b, sum)=> {
+        if (Array.isArray(a)) {
+            let v1 = [a[0] + a[1], a[0] - a[1]];
+            let v2 = [b[0] + b[1], b[0] - b[1]];
+            for (let i = 0; i < 2; i++) {
+                for (let j = 0; j < 2; j++) {
+                    if ((v1[i] * v2[j]).toFixed(5) == sum.toFixed(5) || (v1[i] / v2[j]).toFixed(5) == sum.toFixed(5) || (v2[j] / v1[i]).toFixed(5) == sum.toFixed(5)) {
+                        return true;
+                    }
+                }
+            }
+            v1 = [a[0] * a[1], a[0] / a[1], a[1] / a[0]];
+            v2 = [b[0] * b[1], b[0] / b[1], b[1] / a[0]];
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((v1[i] * v2[j]).toFixed(5) == sum || (v1[i] / v2[j]).toFixed(5) == sum.toFixed(5) || (v2[j] / v1[i]).toFixed(5) == sum.toFixed(5)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } else {
+            return (a + b).toFixed(5) == sum.toFixed(5)
+                    || (a - b).toFixed(5) == sum.toFixed(5) || (b - a).toFixed(5) == sum.toFixed(5)
+                    || (a / b).toFixed(5) == sum.toFixed(5) || (b / a).toFixed(5) == sum.toFixed(5)
+                    || (a * b).toFixed(5) == sum.toFixed(5);
+        }
+    };
+
+    // console.log(judgePoint24([3, 3, 7, 7]));
+    //    console.log(judgePoint24([1, 9, 1, 2]));
+    //    console.log(judgePoint24([4, 1, 3, 6]));
+    //    console.log(judgePoint24([4, 1, 8, 7]));
+
+    /** 886 dfs问题要注意回避重复子问题
+     * @param {number} N
+     * @param {number[][]} dislikes
+     * @return {boolean}
+     */
+    var possibleBipartition = function (N, dislikes) {
+        const hatred = {};
+        //获得仇恨关系
+        dislikes.forEach((d)=> {
+            if (hatred[d[0]]) {
+                hatred[d[0]].add(d[1]);
+            } else {
+                hatred[d[0]] = new Set([d[1]]);
+            }
+            if (hatred[d[1]]) {
+                hatred[d[1]].add(d[0]);
+            } else {
+                hatred[d[1]] = new Set([d[0]]);
+            }
+        });
+        const visited = {};
+        let prop, groups;
+        for (let i = 1; i <= N; i++) {
+            //这个点已被前面的点dfs游览过,则继续.仇恨关系为1的点也不会对结果产生影响,应继续
+            if (!visited[i] && hatred[i] && hatred[i].size > 1) {
+                let queue = [i];
+                prop = 0;
+                //set去重更好
+                groups = {0: new Set([i]), 1: new Set()};
+                while (queue.length) {
+                    let enemies = [];
+                    queue.forEach((a)=> {
+                        visited[a] = true;
+                        enemies = enemies.concat([...hatred[a]]);
+                    });
+                    enemies = [... new Set(enemies)];
+                    for (let j = 0; j < enemies.length; j++) {
+                        //敌人在当前组中,则返回false
+                        if (groups[prop].has(enemies[j])) {
+                            return false;
+                        }
+                        groups[(prop + 1) % 2].add(enemies[j]);
+                    }
+                    //两组之间切换
+                    prop = (prop + 1) % 2;
+                    queue = enemies.filter(a=>!visited[a]);
+                }
+            }
+        }
+        return true;
+    };
+
+    //etl
+    //    var possibleBipartition = function (N, dislikes) {
+    //        const hatred = {};
+    //        dislikes.forEach((d)=> {
+    //            if (hatred[d[0]]) {
+    //                hatred[d[0]].add(d[1]);
+    //            } else {
+    //                hatred[d[0]] = new Set([d[1]]);
+    //            }
+    //            if (hatred[d[1]]) {
+    //                hatred[d[1]].add(d[0]);
+    //            } else {
+    //                hatred[d[1]] = new Set([d[0]]);
+    //            }
+    //        });
+    //        const groupA = new Array(N + 1).fill(1);
+    //        const groupB = new Array(N + 1).fill(1);
+    //        return dfs886(dislikes, groupA, groupB, hatred);
+    //    };
+
+
+    //etl
+    const dfs886 = (dislikes, A, B, hatred)=> {
+        if (!dislikes.length) {
+            return true;
+        }
+        console.log('A:', A);
+        console.log('B:', B);
+        const dislikesCopy = [...dislikes];
+        const [person1, person2] = dislikesCopy.shift();
+        const ALike0 = A[person1];
+        const ALike1 = A[person2];
+        const BLike0 = B[person1];
+        const BLike1 = B[person2];
+        let ret = false;
+        if (!ALike0 && !BLike0 || !ALike1 && !BLike1 || !ALike0 && !ALike1 || !BLike0 && !BLike1) {
+            return false;
+        } else if (ALike0 && ALike1 && BLike0 && BLike1) {
+            let group1 = [...A], group2 = [...B];
+            A[person1]++;
+            if (A[person1] == 2) {
+                hatred[person1].forEach(v=> {
+                    A[v] = 0;
+                });
+            }
+            B[person2]++;
+            if (B[person2] == 2) {
+                hatred[person2].forEach(v=> {
+                    B[v] = 0;
+                });
+            }
+            ret = dfs886(dislikesCopy, A, B, hatred) || ret;
+            if (ret) {
+                return true;
+            }
+            group1[person2]++;
+            if (group1[person2] == 2) {
+                hatred[person2].forEach(v=> {
+                    group1[v] = 0;
+                });
+            }
+            group2[person1]++;
+            if (group2[person1] == 2) {
+                hatred[person1].forEach(v=> {
+                    group2[v] = 0;
+                });
+            }
+            return dfs886(dislikesCopy, group1, group2, hatred) || ret;
+
+        } else if (ALike0 && BLike1) {
+            A[person1]++;
+            if (A[person1] == 2) {
+                hatred[person1].forEach(v=> {
+                    A[v] = 0;
+                });
+            }
+            B[person2]++;
+            if (B[person2] == 2) {
+                hatred[person2].forEach(v=> {
+                    B[v] = 0;
+                });
+            }
+            return dfs886(dislikesCopy, A, B, hatred);
+        } else if (ALike1 && BLike0) {
+            A[person2]++;
+            if (A[person2] == 2) {
+                hatred[person2].forEach(v=> {
+                    A[v] = 0;
+                });
+            }
+            B[person1]++;
+            if (B[person1] == 2) {
+                hatred[person1].forEach(v=> {
+                    B[v] = 0;
+                });
+            }
+            return dfs886(dislikesCopy, A, B, hatred);
+        } else {
+            debugger;
+        }
+    };
+//    console.log(possibleBipartition(5, [[1, 2], [2, 3], [3, 4], [4, 5], [1, 5]]));
+//    console.log(possibleBipartition(4, [[1, 2], [1, 3], [3, 4]]));
+
+</script>
+</body>
+</html>

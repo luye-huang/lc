@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Queue处理一个元素,会影响其他被处理的元素时考虑优先队列</title>
+</head>
+<body>
+<script>
+    /** 42  用索引优先队列存放height,大的先出,维护一个范围。每次范围扩展,alive减去扩展掉的元素个数
+     * @param {number[]} height
+     * @return {number}
+     */
+    function QueueIndex(list) {
+        this.list = [];
+        this.values = list;
+        list.forEach((a, i)=>this.push(i));
+    }
+    QueueIndex.prototype.push = function (idx) {
+        this.list.push(idx);
+        for (let i = this.list.length - 1; i > 0; i--) {
+            if (this.values[this.list[i]] > this.values[this.list[i - 1]]) {
+                [this.list[i - 1], this.list[i]] = [this.list[i], this.list[i - 1]];
+            } else {
+                break;
+            }
+        }
+    };
+    QueueIndex.prototype.pop = function (min) {
+        if (min) {
+            return this.list.pop();
+        } else {
+            return this.list.shift();
+        }
+    };
+    var trap = function (height) {
+        if (height.length < 2) {
+            return 0;
+        }
+        let ret = 0;
+        const queue = new QueueIndex(height);
+        const boundary = queue.pop();
+        let [left , right] =[boundary, boundary];
+        let alive = queue.size();
+        while (alive) {
+            const site = queue.pop();
+            if (site > left && site < right) {
+                continue;
+            } else {
+                if (site < left) {
+                    for (let i = site + 1, limit = height[site]; i < left; i++) {
+                        ret += limit - height[i];
+                    }
+                    alive -= left - site;
+                    left = site;
+                }
+                if (site > right) {
+                    for (let i = right + 1, limit = height[site]; i < site; i++) {
+                        ret += limit - height[i];
+                    }
+                    alive -= site - right;
+                    right = site;
+                }
+            }
+        }
+        return ret;
+    };
+    //    console.log(trap([5, 2, 1, 2, 1, 5]));
+    //    console.log(trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]));
+
+
+    /** 135
+     * @param {number[]} ratings
+     * @return {number}
+     */
+    var candy = function (ratings) {
+        const len = ratings.length;
+        if (!len) {
+            return 0;
+        }
+        const queue = new QueueIndex135(ratings);
+        const candies = new Array(len);
+        let ret = 0;
+        while (queue.peek() != undefined) {
+            const kid = queue.pop();
+            //console.log('kid:', kid);
+            let candy = 1;
+            let kidComp = kid - 1;
+            if (ratings[kidComp] < ratings[kid]) {
+                candy = candies[kid - 1] + 1;
+            }
+            kidComp = kid + 1;
+            if (ratings[kidComp] < ratings[kid]) {
+                candy = Math.max(candies[kid + 1] + 1, candy);
+            }
+            candies[kid] = candy;
+            ret += candy;
+        }
+        return ret;
+    };
+
+    class QueueIndex135 {
+        constructor(list) {
+            this.value = [];
+            this._list = list;
+            list.forEach((a, i)=> {
+                this.push(i);
+            });
+        }
+
+        push(el) {
+            this.value.push(el);
+            let index = this.value.length - 1;
+            while (index) {
+                if (this._list[this.value[index]] > this._list[this.value[index - 1]]) {
+                    [this.value[index], this.value[index - 1]] = [this.value[index - 1], this.value[index]];
+                    index--;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        pop(max) {
+            if (max) {
+                return this.value.unshift();
+            } else {
+                return this.value.pop();
+            }
+        }
+
+        peek(max) {
+            if (max) {
+                return this.value[this.value.length - 1];
+            } else {
+                return this.value[0];
+            }
+        }
+    }
+
+
+    /** 767
+     * @param {string} S
+     * @return {string}
+     */
+    var reorganizeString = function (S) {
+        const queue = new MyQueue(Array.from(S));
+        let ret = '', cur = 'null';
+        if (!S.length || queue.peek().value > Math.ceil(S.length / 2)) {
+            return '';
+        }
+        while (queue.peek() && (queue.peek().value > 1 || queue.peek().key == cur)) {
+            const {key, idx} = queue.sort(cur);
+            queue.decrease(idx);
+            cur = key;
+            ret += cur;
+        }
+        return ret + queue.stringfy();
+    };
+    function MyQueue(list) {
+        this.list = [];
+        list.forEach(a=>this.push(a));
+    }
+    MyQueue.prototype.push = function (char) {
+        const idx = this.list.findIndex(a=>a.key == char);
+        if (idx == -1) {
+            this.list.push({key: char, value: 1});
+        } else {
+            this.list[idx].value++;
+            this.refreshInc(idx);
+        }
+    };
+    MyQueue.prototype.peek = function () {
+        return this.list[0];
+    };
+    MyQueue.prototype.refreshInc = function (idx) {
+        while (idx > 0) {
+            if (this.list[idx].value > this.list[idx - 1].value) {
+                [this.list[idx - 1].value, this.list[idx].value] = [this.list[idx].value, this.list[idx - 1].value];
+                [this.list[idx - 1].key, this.list[idx].key] = [this.list[idx].key, this.list[idx - 1].key];
+                idx--;
+            } else {
+                break;
+            }
+        }
+    };
+    MyQueue.prototype.sort = function (char) {
+        let idx = this.list.findIndex(a=> a.key != char);
+        idx = idx == -1 ? 0 : idx;
+        return Object.assign(this.list[idx], {idx: idx});
+    };
+    MyQueue.prototype.decrease = function (idx) {
+        if (this.list[idx].value > 1) {
+            this.list[idx].value--;
+            this.refreshDec(idx);
+        } else {
+            this.list.splice(idx, 1);
+        }
+    };
+    MyQueue.prototype.refreshDec = function (idx) {
+        while (idx < this.list.length - 1) {
+            if (this.list[idx].value < this.list[idx + 1].value) {
+                [this.list[idx + 1].value, this.list[idx].value] = [this.list[idx].value, this.list[idx + 1].value];
+                [this.list[idx + 1].key, this.list[idx].key] = [this.list[idx].key, this.list[idx + 1].key];
+                idx++;
+            } else {
+                break;
+            }
+        }
+    };
+    MyQueue.prototype.stringfy = function () {
+        return this.list.map(a=>a.key).join('');
+    };
+    //    console.log(reorganizeString('aaab'));
+    //    console.log(reorganizeString("eqmeyggvp"));
+    //    console.log(reorganizeString("abbabbaaab"));
+
+
+    /** 857 计算每种ratio下的最少工资: 把工人按照ratio排列, 放入优先队列。多于k时,去除队中最大quality成员
+     * @param {number[]} quality
+     * @param {number[]} wage
+     * @param {number} K
+     * @return {number}
+     */
+    var mincostToHireWorkers = function (quality, wage, K) {
+        const queueByRatio = [0];
+        for (let i = 1; i < wage.length; i++) {
+            const ratio = wage[i] / quality[i];
+            let j = 0;
+            for (; j < queueByRatio.length; j++) {
+                if (ratio <= wage[queueByRatio[j]] / quality[queueByRatio[j]]) {
+                    queueByRatio.splice(j - queueByRatio.length, 0, i);
+                    break;
+                }
+            }
+            if (j == queueByRatio.length) {
+                queueByRatio.push(i);
+            }
+        }
+        const workers = queueByRatio.slice(0, K);
+        let sumQualilty = 0;
+        workers.forEach(w=> {
+            sumQualilty += quality[w];
+        });
+        let ret = sumQualilty * wage[workers[workers.length - 1]] / quality[workers[workers.length - 1]];
+        queueByRatio.splice(0, K);
+        while (queueByRatio.length) {
+            let idx = null, maxQuality = -Infinity, workerNew = queueByRatio.shift();
+            workers.push(workerNew);
+            workers.forEach((w, i)=> {
+                if (quality[w] > maxQuality) {
+                    idx = i;
+                    maxQuality = quality[w];
+                }
+            });
+            sumQualilty = sumQualilty - quality[workers[idx]] + quality[workerNew];
+            workers.splice(idx, 1);
+            ret = Math.min(ret, sumQualilty * wage[workerNew] / quality[workerNew]);
+        }
+        return parseFloat(ret.toFixed(5));
+    };
+//        console.log(mincostToHireWorkers([32, 43, 66, 9, 94, 57, 25, 44, 99, 19],
+//                [187, 366, 117, 363, 121, 494, 348, 382, 385, 262]
+//                , 4));
+//    console.log(mincostToHireWorkers([3, 1, 10, 10, 1], [4, 8, 2, 2, 7], 3));
+</script>
+</body>
+</html>
