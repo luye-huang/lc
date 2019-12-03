@@ -34,10 +34,3 @@ func main() {
 	// arr := [10]int{1, 100, 1, 1, 1, 100, 1, 1, 100, 1}
 	b = minCostClimbingStairs(arr[:])
 }
-
-// func haha() int {
-// 	fmt.Println(55)
-// 	return 2
-// }
-
-// minCostClimbingStairs([5]int32{1000.0, 2.0, 3.4, 7.0, 50.0})
